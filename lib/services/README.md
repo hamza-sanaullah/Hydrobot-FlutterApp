@@ -8,7 +8,7 @@ Contains service classes for external API communication.
 |------|---------|--------|
 | `influxdb_service.dart` | InfluxDB database queries | ✅ Active |
 | `wqm_service.dart` | Water Quality Monitoring ML | ✅ Active |
-| `fhd_service.dart` | Fish Health Detection ML | 🔜 Reserved |
+| `fhd_service.dart` | Fish Health Detection ML | ✅ Active |
 
 ## 🔄 Service Architecture
 
@@ -23,13 +23,13 @@ Contains service classes for external API communication.
 ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
 │   InfluxDB    │  │     WQM       │  │     FHD       │
 │   Service     │  │   Service     │  │   Service     │
-└───────┬───────┘  └───────┬───────┘  └───────────────┘
+└───────┬───────┘  └───────┬───────┘  └───────┬───────┘
         │                  │                  │
-        │ HTTP/Flux        │ HTTP/REST        │ (Future)
+        │ HTTP/Flux        │ HTTP/REST        │ HTTP/REST
         ▼                  ▼                  ▼
 ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
 │   InfluxDB    │  │  FastAPI      │  │  FastAPI      │
-│  :8086        │  │  /WQM         │  │  /FHD         │
+│  :8086        │  │  :8000/WQM    │  │  :8001/FHD    │
 └───────────────┘  └───────────────┘  └───────────────┘
 ```
 
@@ -121,21 +121,51 @@ Future<Alert?> getWaterQualityPrediction({
 
 ---
 
-## 3️⃣ FHD Service (Fish Health Detection) 🔜
+## 3️⃣ FHD Service (Fish Health Detection)
 
-Reserved for future implementation.
+Handles communication with FHD ML backend for fish disease detection via camera analysis.
 
-### Planned Features
-
-- Camera feed analysis
-- Fish behavior detection
-- Disease identification
-- Health recommendations
-
-### API Endpoint (Planned)
+### API Endpoint
 
 ```
-POST http://127.0.0.1:8000/FHD
+POST http://localhost:8001/FHD
+```
+
+### Request Payload
+
+```json
+{}
+```
+Empty JSON payload - FHD backend handles camera capture internally.
+
+### Response
+
+```json
+{
+  "alert_msg1": "",
+  "alert_msg2": "🟢 HEALTHY | No disease symptoms detected. Fish appear normal and active.",
+  "alert_msg3": "🟡 CONCERNING | White Spot Disease (Ich) suspected...",
+  "alert_msg14": "🔴 CRITICAL | Epizootic Ulcerative Syndrome (EUS) detected...",
+  ...
+}
+```
+
+**Note**: Response contains variable number of `alert_msg` fields (alert_msg1 to alert_msgN).
+Each non-empty message becomes a separate alert notification.
+
+### Alert Severity Levels
+
+| Emoji | Level | Description |
+|-------|-------|-------------|
+| 🟢 | HEALTHY | No disease symptoms detected |
+| 🟡 | CONCERNING | Potential disease, monitoring required |
+| 🔴 | CRITICAL | Urgent action required |
+
+### Method
+
+```dart
+// Returns list of alerts (one for each non-empty alert_msg)
+Future<List<Alert>> getFishHealthPredictions()
 ```
 
 ---
@@ -154,30 +184,25 @@ POST http://127.0.0.1:8000/FHD
 │ raw_sensors │◄─────│    App      │
 └──────┬──────┘ Poll └──────┬──────┘
        │                    │
-       │                    │ POST /WQM
-       │                    ▼
-       │              ┌─────────────┐
-       │              │ WQM Backend │
-       │              │  (FastAPI)  │
-       │              └──────┬──────┘
-       │                     │
-       │  Update taken=1     │
-       │◄────────────────────┤
-       │                     │
-       │  Write processed    │
-       │◄────────────────────┤
-       ▼                     │
-┌─────────────┐              │
-│  InfluxDB   │              │
-│ processed_  │              │ Return Alert
-│  results    │              │
-└──────┬──────┘              │
-       │                     │
-       │ Query for           │
-       │ dashboard/history   │
-       │                     ▼
-       └────────────────►┌─────────────┐
-                         │   Mobile    │
-                         │    App      │
-                         └─────────────┘
+       │         ┌──────────┴──────────┐
+       │         │                     │
+       │         ▼                     ▼
+       │   ┌───────────┐         ┌───────────┐
+       │   │    WQM    │         │    FHD    │
+       │   │  :8000    │         │  :8001    │
+       │   └─────┬─────┘         └─────┬─────┘
+       │         │                     │
+       │         │ Water Quality       │ Fish Health
+       │         │ Alert (1)           │ Alerts (N)
+       │         │                     │
+       │  Update │                     │
+       │  taken=1│                     │
+       │◄────────┘                     │
+       │                               │
+       ▼                               ▼
+┌─────────────┐              ┌─────────────────┐
+│  InfluxDB   │              │  Mobile App     │
+│ processed_  │              │  Alerts List    │
+│  results    │              │  (WQM + FHD)    │
+└─────────────┘              └─────────────────┘
 ```

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/sensor_data.dart';
@@ -28,7 +27,8 @@ class InfluxDBService {
       if (response.statusCode == 200) {
         return _parseCSVResponse(response.body);
       } else {
-        print('InfluxDB query failed: ${response.statusCode} - ${response.body}');
+        print(
+            'InfluxDB query failed: ${response.statusCode} - ${response.body}');
         return [];
       }
     } catch (e) {
@@ -89,7 +89,7 @@ class InfluxDBService {
 
   /// Get unprocessed raw sensor data (where taken = 0)
   Future<List<RawSensorPoint>> getUnprocessedRawData() async {
-    final query = '''
+    const query = '''
 from(bucket: "${ApiConfig.bucketRaw}")
   |> range(start: -1h)
   |> filter(fn: (r) => r["_measurement"] == "sensor_readings")
@@ -99,15 +99,18 @@ from(bucket: "${ApiConfig.bucketRaw}")
 ''';
 
     final results = await _executeQuery(query);
-    return results.map((row) => _mapToRawSensorPoint(row)).whereType<RawSensorPoint>().toList();
+    return results
+        .map((row) => _mapToRawSensorPoint(row))
+        .whereType<RawSensorPoint>()
+        .toList();
   }
 
   /// Get latest processed sensor data for dashboard
   Future<SensorData?> getLatestProcessedData() async {
-    final query = '''
+    const query = '''
 from(bucket: "${ApiConfig.bucketProcessed}")
   |> range(start: -24h)
-  |> filter(fn: (r) => r["_measurement"] == "sensor_readings")
+  |> filter(fn: (r) => r["_measurement"] == "prediction")
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> sort(columns: ["_time"], desc: true)
   |> limit(n: 1)
@@ -129,14 +132,17 @@ from(bucket: "${ApiConfig.bucketProcessed}")
     final query = '''
 from(bucket: "${ApiConfig.bucketProcessed}")
   |> range(start: $rangeStr)
-  |> filter(fn: (r) => r["_measurement"] == "sensor_readings")
+  |> filter(fn: (r) => r["_measurement"] == "prediction")
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> sort(columns: ["_time"], desc: true)
   |> limit(n: $limit)
 ''';
 
     final results = await _executeQuery(query);
-    return results.map((row) => _mapToSensorData(row)).whereType<SensorData>().toList();
+    return results
+        .map((row) => _mapToSensorData(row))
+        .whereType<SensorData>()
+        .toList();
   }
 
   RawSensorPoint? _mapToRawSensorPoint(Map<String, dynamic> row) {
@@ -202,26 +208,6 @@ from(bucket: "${ApiConfig.bucketProcessed}")
     if (value is int) return value.toDouble();
     if (value is String) return double.tryParse(value);
     return null;
-  }
-
-  int _calculateQualityCode({
-    required double ph,
-    required double temperature,
-    required double turbidity,
-    required double ammonia,
-    required double dissolvedOxygen,
-  }) {
-    final phOk = ph >= 6.8 && ph <= 7.5;
-    final tempOk = temperature >= 24 && temperature <= 28;
-    final turbidityOk = turbidity < 20;
-    final ammoniaOk = ammonia < 0.3;
-    final doOk = dissolvedOxygen >= 5;
-
-    final score = [phOk, tempOk, turbidityOk, ammoniaOk, doOk].where((ok) => ok).length;
-
-    if (score >= 4) return 0;
-    if (score >= 2) return 1;
-    return 2;
   }
 
   Future<bool> testConnection() async {

@@ -6,7 +6,7 @@ import '../models/alert.dart';
 /// Water Quality Monitoring Service
 /// Handles communication with WQM backend for water quality predictions
 class WQMService {
-  final String _baseUrl = ApiConfig.backendBaseUrl;
+  final String _baseUrl = ApiConfig.wqmBaseUrl;
 
   /// Send sensor data to Water Quality Monitoring endpoint
   /// Returns alert message from ML pipeline

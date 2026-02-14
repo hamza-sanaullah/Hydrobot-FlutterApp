@@ -11,12 +11,12 @@ class AppTheme {
   static const Color gray600 = Color(0xFF4B5563);
   static const Color gray700 = Color(0xFF374151);
   static const Color gray900 = Color(0xFF111827);
-  
+
   // Status colors
   static const Color greenStatus = Color(0xFF22C55E);
   static const Color yellowStatus = Color(0xFFEAB308);
   static const Color redStatus = Color(0xFFEF4444);
-  
+
   // Chart colors
   static const Color blue500 = Color(0xFF3B82F6);
   static const Color red500 = Color(0xFFEF4444);
@@ -24,20 +24,19 @@ class AppTheme {
   static const Color green500 = Color(0xFF22C55E);
   static const Color purple500 = Color(0xFFA855F7);
   static const Color orange500 = Color(0xFFF97316);
-  
+
   // Alert type colors
   static const Color waterQualityColor = Color(0xFF3B82F6);
   static const Color fishHealthColor = Color(0xFFF97316);
-  
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       scaffoldBackgroundColor: background,
-      colorScheme: ColorScheme.light(
+      colorScheme: const ColorScheme.light(
         primary: gray900,
         secondary: gray600,
         surface: white,
-        background: background,
         error: redStatus,
       ),
       appBarTheme: const AppBarTheme(
@@ -58,7 +57,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: white,
         elevation: 0,
         shape: RoundedRectangleBorder(

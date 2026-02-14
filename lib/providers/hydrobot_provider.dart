@@ -9,10 +9,10 @@ import '../services/fhd_service.dart';
 class HydrobotProvider extends ChangeNotifier {
   final InfluxDBService _influxService = InfluxDBService();
   final WQMService _wqmService = WQMService();
-  final FHDService _fhdService = FHDService(); // Reserved for future
+  final FHDService _fhdService = FHDService();
 
   List<SensorData> _sensorDataHistory = [];
-  List<Alert> _alerts = [];
+  final List<Alert> _alerts = [];
   SensorData? _latestSensorData;
   Timer? _pollingTimer;
 
@@ -20,10 +20,10 @@ class HydrobotProvider extends ChangeNotifier {
   String? _errorMessage;
   bool _influxConnected = false;
   bool _wqmConnected = false;
-  bool _fhdConnected = false; // Reserved for future
+  bool _fhdConnected = false;
 
   // Settings
-  int _pollingIntervalSeconds = 3;
+  int _pollingIntervalSeconds = 15;
   bool _notificationsEnabled = true;
 
   // Getters
@@ -52,7 +52,7 @@ class HydrobotProvider extends ChangeNotifier {
     // Test connections
     _influxConnected = await _influxService.testConnection();
     _wqmConnected = await _wqmService.testConnection();
-    // _fhdConnected = await _fhdService.testConnection(); // Enable when FHD backend is ready
+    _fhdConnected = await _fhdService.testConnection();
 
     // Load initial data
     await refreshDashboardData();
@@ -76,25 +76,42 @@ class HydrobotProvider extends ChangeNotifier {
     );
   }
 
-  /// Check raw_sensors bucket for unprocessed data (taken=0) and send to WQM
+  /// Check raw_sensors bucket for unprocessed data (taken=0) and send to WQM & FHD
   Future<void> _processUnprocessedRawData() async {
     try {
       // Get unprocessed raw data (taken = 0)
       final unprocessedData = await _influxService.getUnprocessedRawData();
 
       for (final rawPoint in unprocessedData) {
-        // Send to WQM service for water quality prediction
-        final alert = await _wqmService.getWaterQualityPrediction(
-          temp: rawPoint.temperature,
-          ph: rawPoint.ph,
-          turbidity: rawPoint.turbidity,
-          timestampNano: rawPoint.timestampNano,
-        );
+        // Send requests to both WQM and FHD services simultaneously
+        final results = await Future.wait([
+          _wqmService.getWaterQualityPrediction(
+            temp: rawPoint.temperature,
+            ph: rawPoint.ph,
+            turbidity: rawPoint.turbidity,
+            timestampNano: rawPoint.timestampNano,
+          ),
+          _fhdService.getFishHealthPredictions(),
+        ]);
 
-        // If we got an alert, add it to the list
-        if (alert != null && _notificationsEnabled) {
-          _alerts.insert(0, alert);
+        // Process WQM alert (single alert)
+        final wqmAlert = results[0] as Alert?;
+        if (wqmAlert != null && _notificationsEnabled) {
+          _alerts.insert(0, wqmAlert);
         }
+
+        // Process FHD alerts (multiple alerts from response)
+        final fhdAlerts = results[1] as List<Alert>;
+        if (_notificationsEnabled) {
+          for (final fhdAlert in fhdAlerts) {
+            _alerts.insert(0, fhdAlert);
+          }
+        }
+
+        // Rate Limit Protection:
+        // Model Limit: 8000 TPM. Approx 1500 tokens/req => max ~5 req/min.
+        // We wait 12 seconds between calls to be safe.
+        await Future.delayed(const Duration(seconds: 12));
 
         // Backend will mark as processed (taken = 1) itself
       }
@@ -143,6 +160,16 @@ class HydrobotProvider extends ChangeNotifier {
     }
   }
 
+  /// Mark ALL alerts as read
+  void markAllAlertsAsRead() {
+    for (var i = 0; i < _alerts.length; i++) {
+      if (!_alerts[i].read) {
+        _alerts[i] = _alerts[i].copyWith(read: true);
+      }
+    }
+    notifyListeners();
+  }
+
   /// Set polling interval
   void setPollingInterval(int seconds) {
     _pollingIntervalSeconds = seconds;
@@ -169,6 +196,7 @@ class HydrobotProvider extends ChangeNotifier {
 
     _influxConnected = await _influxService.testConnection();
     _wqmConnected = await _wqmService.testConnection();
+    _fhdConnected = await _fhdService.testConnection();
     await refreshDashboardData();
     await refreshHistoryData();
 

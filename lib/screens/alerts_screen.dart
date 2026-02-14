@@ -21,7 +21,8 @@ class AlertsScreen extends StatelessWidget {
                 if (provider.unreadCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppTheme.redStatus,
                       borderRadius: BorderRadius.circular(12),
@@ -40,6 +41,24 @@ class AlertsScreen extends StatelessWidget {
             );
           },
         ),
+        actions: [
+          Consumer<HydrobotProvider>(
+            builder: (context, provider, child) {
+              if (provider.unreadCount == 0) return const SizedBox.shrink();
+              return TextButton(
+                onPressed: () => provider.markAllAlertsAsRead(),
+                child: const Text(
+                  'Mark all read',
+                  style: TextStyle(
+                    color: AppTheme.blue500,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 8),
+        ],
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
@@ -52,7 +71,7 @@ class AlertsScreen extends StatelessWidget {
       body: Consumer<HydrobotProvider>(
         builder: (context, provider, child) {
           if (provider.alerts.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -61,7 +80,7 @@ class AlertsScreen extends StatelessWidget {
                     size: 48,
                     color: AppTheme.gray400,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'No alerts yet',
                     style: TextStyle(
@@ -69,7 +88,7 @@ class AlertsScreen extends StatelessWidget {
                       color: AppTheme.gray400,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     'System is monitoring...',
                     style: TextStyle(
@@ -142,8 +161,8 @@ class _AlertCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isWaterQuality
-                    ? AppTheme.blue500.withOpacity(0.1)
-                    : AppTheme.orange500.withOpacity(0.1),
+                    ? AppTheme.blue500.withValues(alpha: 0.1)
+                    : AppTheme.orange500.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -164,7 +183,7 @@ class _AlertCard extends StatelessWidget {
                     children: [
                       Text(
                         alert.typeDisplayName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: AppTheme.gray900,
@@ -172,7 +191,7 @@ class _AlertCard extends StatelessWidget {
                       ),
                       Text(
                         _formatTime(alert.timestamp),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.gray400,
                         ),
@@ -182,16 +201,17 @@ class _AlertCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     alert.messagePreview,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
                       color: AppTheme.gray700,
+                      height: 1.2,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (!alert.read) ...[
                     const SizedBox(height: 8),
-                    Text(
+                    const Text(
                       'Tap to view details',
                       style: TextStyle(
                         fontSize: 12,
@@ -209,6 +229,7 @@ class _AlertCard extends StatelessWidget {
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    final local = time.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }

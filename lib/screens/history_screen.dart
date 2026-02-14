@@ -31,7 +31,7 @@ class HistoryScreen extends StatelessWidget {
           }
 
           if (provider.sensorDataHistory.isEmpty) {
-            return Center(
+            return const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -40,7 +40,7 @@ class HistoryScreen extends StatelessWidget {
                     size: 48,
                     color: AppTheme.gray400,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text(
                     'No data history yet',
                     style: TextStyle(
@@ -48,7 +48,7 @@ class HistoryScreen extends StatelessWidget {
                       color: AppTheme.gray400,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     'Processed data will appear here',
                     style: TextStyle(
@@ -80,7 +80,7 @@ class HistoryScreen extends StatelessWidget {
                     // Date Header
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.calendar_today,
                           size: 16,
                           color: AppTheme.gray500,
@@ -88,7 +88,7 @@ class HistoryScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           date,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: AppTheme.gray600,
@@ -113,15 +113,16 @@ class HistoryScreen extends StatelessWidget {
 
   Map<String, List<SensorData>> _groupByDate(List<SensorData> data) {
     final grouped = <String, List<SensorData>>{};
-    
+
     for (final item in data) {
-      final dateKey = DateFormat('MMM d, yyyy').format(item.timestamp);
+      final dateKey =
+          DateFormat('MMM d, yyyy').format(item.timestamp.toLocal());
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }
       grouped[dateKey]!.add(item);
     }
-    
+
     return grouped;
   }
 }
@@ -149,8 +150,8 @@ class _SensorDataCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                DateFormat('HH:mm:ss').format(data.timestamp),
-                style: TextStyle(
+                DateFormat('HH:mm:ss').format(data.timestamp.toLocal()),
+                style: const TextStyle(
                   fontSize: 14,
                   color: AppTheme.gray500,
                 ),
@@ -221,7 +222,7 @@ class _SensorValue extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppTheme.gray500,
           ),
@@ -229,7 +230,7 @@ class _SensorValue extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: AppTheme.gray900,
@@ -254,17 +255,17 @@ class _QualityBadge extends StatelessWidget {
     switch (qualityCode) {
       case 0:
         text = 'Excellent';
-        bgColor = AppTheme.green500.withOpacity(0.1);
+        bgColor = AppTheme.green500.withValues(alpha: 0.1);
         textColor = AppTheme.green500;
         break;
       case 1:
         text = 'Good';
-        bgColor = AppTheme.amber500.withOpacity(0.1);
+        bgColor = AppTheme.amber500.withValues(alpha: 0.1);
         textColor = AppTheme.amber500;
         break;
       default:
         text = 'Poor';
-        bgColor = AppTheme.red500.withOpacity(0.1);
+        bgColor = AppTheme.red500.withValues(alpha: 0.1);
         textColor = AppTheme.red500;
     }
 

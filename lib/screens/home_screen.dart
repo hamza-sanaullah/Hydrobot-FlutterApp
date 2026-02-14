@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: Consumer<HydrobotProvider>(
         builder: (context, provider, child) {
           return Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
                 top: BorderSide(color: AppTheme.gray300, width: 1),
               ),

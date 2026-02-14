@@ -31,7 +31,7 @@ class SettingsScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'Enable Notifications',
                         style: TextStyle(
                           fontSize: 16,
@@ -43,7 +43,7 @@ class SettingsScreen extends StatelessWidget {
                         onChanged: (value) {
                           provider.setNotificationsEnabled(value);
                         },
-                        activeColor: AppTheme.gray900,
+                        activeThumbColor: AppTheme.gray900,
                       ),
                     ],
                   ),
@@ -55,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Polling Interval',
                         style: TextStyle(
                           fontSize: 14,
@@ -76,9 +76,14 @@ class SettingsScreen extends StatelessWidget {
                           underline: const SizedBox(),
                           items: const [
                             DropdownMenuItem(value: 1, child: Text('1 second')),
-                            DropdownMenuItem(value: 3, child: Text('3 seconds')),
-                            DropdownMenuItem(value: 5, child: Text('5 seconds')),
-                            DropdownMenuItem(value: 10, child: Text('10 seconds')),
+                            DropdownMenuItem(
+                                value: 3, child: Text('3 seconds')),
+                            DropdownMenuItem(
+                                value: 5, child: Text('5 seconds')),
+                            DropdownMenuItem(
+                                value: 10, child: Text('10 seconds')),
+                            DropdownMenuItem(
+                                value: 15, child: Text('15 seconds (Default)')),
                           ],
                           onChanged: (value) {
                             if (value != null) {
@@ -88,7 +93,7 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'How often to check for new sensor data',
                         style: TextStyle(
                           fontSize: 12,
@@ -105,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'System Status',
                         style: TextStyle(
                           fontSize: 16,
@@ -134,7 +139,7 @@ class SettingsScreen extends StatelessWidget {
 
                 // About Section
                 _buildSettingsCard(
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -144,11 +149,11 @@ class SettingsScreen extends StatelessWidget {
                           color: AppTheme.gray600,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                       _AboutRow(label: 'App Name', value: 'HydroBot'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       _AboutRow(label: 'Version', value: '1.0.0'),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       _AboutRow(label: 'Build', value: '2026.01.21'),
                     ],
                   ),
@@ -191,7 +196,7 @@ class _StatusRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             color: AppTheme.gray700,
           ),
@@ -237,14 +242,14 @@ class _AboutRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             color: AppTheme.gray700,
           ),
         ),
         Text(
           value,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             color: AppTheme.gray500,
           ),

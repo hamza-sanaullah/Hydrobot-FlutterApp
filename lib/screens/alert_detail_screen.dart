@@ -77,14 +77,14 @@ class AlertDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
                       Icon(
                         Icons.info_outline,
                         color: AppTheme.gray600,
                         size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Text(
                         'Alert Details',
                         style: TextStyle(
@@ -107,7 +107,7 @@ class AlertDetailScreen extends StatelessWidget {
             // Timestamp
             Text(
               _formatDateTime(alert.timestamp),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppTheme.gray500,
               ),
@@ -134,7 +134,7 @@ class AlertDetailScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   '•',
                   style: TextStyle(
                     fontSize: 14,
@@ -175,7 +175,7 @@ class AlertDetailScreen extends StatelessWidget {
       if (match.start > lastEnd) {
         spans.add(TextSpan(
           text: text.substring(lastEnd, match.start),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 14,
             color: AppTheme.gray700,
             height: 1.5,
@@ -186,7 +186,7 @@ class AlertDetailScreen extends StatelessWidget {
       // Add bold text
       spans.add(TextSpan(
         text: match.group(1),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 14,
           color: AppTheme.gray900,
           fontWeight: FontWeight.bold,
@@ -201,7 +201,7 @@ class AlertDetailScreen extends StatelessWidget {
     if (lastEnd < text.length) {
       spans.add(TextSpan(
         text: text.substring(lastEnd),
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 14,
           color: AppTheme.gray700,
           height: 1.5,

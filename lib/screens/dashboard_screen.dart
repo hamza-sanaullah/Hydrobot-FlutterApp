@@ -71,7 +71,7 @@ class DashboardScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
+          const Text(
             'Water Quality Status',
             style: TextStyle(
               fontSize: 16,
@@ -101,7 +101,7 @@ class DashboardScreen extends StatelessWidget {
           if (data != null)
             Text(
               'Last updated: ${_formatTime(data.timestamp)}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppTheme.gray500,
               ),
@@ -125,7 +125,7 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Factor Contribution',
             style: TextStyle(
               fontSize: 16,
@@ -173,7 +173,7 @@ class DashboardScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     item['name'] as String,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.gray600,
                     ),
@@ -187,7 +187,8 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentAlertsCard(BuildContext context, HydrobotProvider provider) {
+  Widget _buildRecentAlertsCard(
+      BuildContext context, HydrobotProvider provider) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -202,7 +203,7 @@ class DashboardScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Recent Alerts',
                 style: TextStyle(
                   fontSize: 16,
@@ -213,7 +214,7 @@ class DashboardScreen extends StatelessWidget {
                 onPressed: () {
                   // Navigate handled by parent
                 },
-                child: Text(
+                child: const Text(
                   'View All',
                   style: TextStyle(
                     fontSize: 14,
@@ -248,7 +249,7 @@ class DashboardScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       alert.messagePreview,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppTheme.gray700,
                       ),
@@ -295,15 +296,36 @@ class DashboardScreen extends StatelessWidget {
     }
 
     return [
-      {'name': 'pH', 'value': (7.2 - data.ph).abs() * 10, 'color': AppTheme.blue500},
-      {'name': 'Temperature', 'value': (26 - data.temperature).abs() * 2, 'color': AppTheme.red500},
-      {'name': 'Turbidity', 'value': data.turbidity / 2, 'color': AppTheme.amber500},
-      {'name': 'Dissolved O₂', 'value': (7 - data.dissolvedOxygen).abs() * 3, 'color': AppTheme.green500},
-      {'name': 'Ammonia', 'value': data.ammonia * 20, 'color': AppTheme.purple500},
+      {
+        'name': 'pH',
+        'value': (7.2 - data.ph).abs() * 10,
+        'color': AppTheme.blue500
+      },
+      {
+        'name': 'Temperature',
+        'value': (26 - data.temperature).abs() * 2,
+        'color': AppTheme.red500
+      },
+      {
+        'name': 'Turbidity',
+        'value': data.turbidity / 2,
+        'color': AppTheme.amber500
+      },
+      {
+        'name': 'Dissolved O₂',
+        'value': (7 - data.dissolvedOxygen).abs() * 3,
+        'color': AppTheme.green500
+      },
+      {
+        'name': 'Ammonia',
+        'value': data.ammonia * 20,
+        'color': AppTheme.purple500
+      },
     ];
   }
 
   String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    final local = time.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }

@@ -19,7 +19,6 @@ migrate_working_dir/
 .idea/
 
 # VS Code
-.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -81,5 +80,5 @@ coverage/
 *.mocks.dart
 
 # Environment files
-.env
-.env.*
+config.bat
+node_modules

@@ -69,13 +69,9 @@ class FHDService {
   /// Test FHD backend connection
   Future<bool> testConnection() async {
     try {
-      // Send empty POST request to test connection
-      final uri = Uri.parse('$_baseUrl${ApiConfig.fhdEndpoint}');
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({}),
-      );
+      // Use root endpoint for lightweight health check
+      final uri = Uri.parse('$_baseUrl/');
+      final response = await http.get(uri);
       return response.statusCode == 200;
     } catch (e) {
       print('FHD backend connection test failed: $e');

@@ -92,7 +92,7 @@ class InfluxDBService {
     const query = '''
 from(bucket: "${ApiConfig.bucketRaw}")
   |> range(start: -1h)
-  |> filter(fn: (r) => r["_measurement"] == "sensor_readings")
+  |> filter(fn: (r) => r["_measurement"] == "water_quality")
   |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
   |> filter(fn: (r) => r["taken"] == 0 or r["taken"] == 0.0)
   |> sort(columns: ["_time"], desc: false)
@@ -154,18 +154,29 @@ from(bucket: "${ApiConfig.bucketProcessed}")
         return null;
       }
 
+      final timestampNano = _parseNanoseconds(row['_time']) ??
+          (timestamp.microsecondsSinceEpoch * 1000);
+
       return RawSensorPoint(
         temperature: _parseDouble(row['temperature']) ?? 0,
         ph: _parseDouble(row['ph']) ?? 0,
         turbidity: _parseDouble(row['turbidity']) ?? 0,
         taken: _parseDouble(row['taken'])?.toInt() ?? 0,
         timestamp: timestamp,
-        timestampNano: timestamp.microsecondsSinceEpoch * 1000,
+        timestampNano: timestampNano,
       );
     } catch (e) {
       print('Error mapping raw sensor point: $e');
       return null;
     }
+  }
+
+  int? _parseNanoseconds(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   SensorData? _mapToSensorData(Map<String, dynamic> row) {

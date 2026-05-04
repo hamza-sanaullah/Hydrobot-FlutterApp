@@ -2,7 +2,7 @@ class ApiConfig {
   // InfluxDB Configuration
   static const String influxUrl = 'http://localhost:8086';
   static const String influxToken =
-      'kHo6fLeoZblCQVevonnHVHNLWr5vHTBrfl1eO6tBFuEqxr4HNAuGS9fOZLcffBaHY2g1GUNRa93EGYpYCOpALA==';
+      'YWIhRpnw7LrSH6VOlH0iYA0fEvg91DobZJnEO6qbHK5Lp2BpmUVVfeGpmp9KtxAJKn90hGKUqWYXb2qo_F2yJw==';
   static const String influxOrg = 'Hydrobot';
   static const String bucketRaw = 'raw_sensors';
   static const String bucketProcessed = 'processed_results';

@@ -23,7 +23,7 @@ class HydrobotProvider extends ChangeNotifier {
   bool _fhdConnected = false;
 
   // Settings
-  int _pollingIntervalSeconds = 15;
+  int _pollingIntervalSeconds = 180; // 3 minutes default
   bool _notificationsEnabled = true;
 
   // Getters
@@ -42,27 +42,50 @@ class HydrobotProvider extends ChangeNotifier {
   List<Alert> get recentAlerts => _alerts.take(2).toList();
 
   HydrobotProvider() {
-    _initialize();
+    _initializeAsync(); // Don't await - let it run in background
   }
 
-  Future<void> _initialize() async {
+  /// Initialize asynchronously without blocking UI
+  void _initializeAsync() {
     _isLoading = true;
     notifyListeners();
 
-    // Test connections
-    _influxConnected = await _influxService.testConnection();
-    _wqmConnected = await _wqmService.testConnection();
-    _fhdConnected = await _fhdService.testConnection();
+    // Fire off initialization in background
+    _runInitialization();
+  }
 
-    // Load initial data
-    await refreshDashboardData();
-    await refreshHistoryData();
+  /// Run initialization without blocking
+  Future<void> _runInitialization() async {
+    try {
+      // Test connections in parallel
+      final results = await Future.wait([
+        _influxService.testConnection(),
+        _wqmService.testConnection(),
+        _fhdService.testConnection(),
+      ]);
 
-    // Start polling loop for raw sensor data
-    _startPollingLoop();
+      _influxConnected = results[0];
+      _wqmConnected = results[1];
+      _fhdConnected = results[2];
+
+      print(
+        'Connections - InfluxDB: $_influxConnected, WQM: $_wqmConnected, FHD: $_fhdConnected',
+      );
+
+      // Load initial data
+      await refreshDashboardData();
+      await refreshHistoryData();
+
+    } catch (e) {
+      print('Initialization error: $e');
+      _errorMessage = 'Failed to initialize: $e';
+    }
 
     _isLoading = false;
     notifyListeners();
+
+    // Start polling loop after initialization
+    _startPollingLoop();
   }
 
   /// Start the forever polling loop to check raw_sensors bucket
@@ -76,50 +99,67 @@ class HydrobotProvider extends ChangeNotifier {
     );
   }
 
-  /// Check raw_sensors bucket for unprocessed data (taken=0) and send to WQM & FHD
+  /// Check raw_sensors bucket for unprocessed data (taken=0) and send to WQM & FHD sequentially
+  /// Flow: WQM (immediate render) → FHD (render immediately) → new polling cycle
   Future<void> _processUnprocessedRawData() async {
     try {
+      if (!_influxConnected) {
+        print('Skipping polling: InfluxDB is disconnected.');
+        return;
+      }
+
       // Get unprocessed raw data (taken = 0)
       final unprocessedData = await _influxService.getUnprocessedRawData();
 
+      if (unprocessedData.isEmpty) {
+        print('No unprocessed raw data found.');
+      }
+
       for (final rawPoint in unprocessedData) {
-        // Send requests to both WQM and FHD services simultaneously
-        final results = await Future.wait([
-          _wqmService.getWaterQualityPrediction(
+        if (!_notificationsEnabled) continue;
+
+        try {
+          // Step 1: Send to WQM and wait for response
+          final wqmAlert = await _wqmService.getWaterQualityPrediction(
             temp: rawPoint.temperature,
             ph: rawPoint.ph,
             turbidity: rawPoint.turbidity,
             timestampNano: rawPoint.timestampNano,
-          ),
-          _fhdService.getFishHealthPredictions(),
-        ]);
+          );
 
-        // Process WQM alert (single alert)
-        final wqmAlert = results[0] as Alert?;
-        if (wqmAlert != null && _notificationsEnabled) {
-          _alerts.insert(0, wqmAlert);
-        }
-
-        // Process FHD alerts (multiple alerts from response)
-        final fhdAlerts = results[1] as List<Alert>;
-        if (_notificationsEnabled) {
-          for (final fhdAlert in fhdAlerts) {
-            _alerts.insert(0, fhdAlert);
+          // Step 2: Add WQM alert immediately if it exists
+          if (wqmAlert != null) {
+            _alerts.insert(0, wqmAlert);
+            notifyListeners(); // Render immediately
+            print('[WQM] Alert rendered immediately');
           }
+
+          // Refresh dashboard and history as soon as WQM returns
+          await refreshDashboardData();
+          await refreshHistoryData();
+
+          // Small delay to respect rate limiting
+          await Future.delayed(const Duration(seconds: 2));
+
+          // Step 3: Send to FHD
+          final fhdAlerts = await _fhdService.getFishHealthPredictions();
+
+          // Step 4: Add FHD alerts immediately as they arrive
+          if (fhdAlerts.isNotEmpty) {
+            for (final fhdAlert in fhdAlerts) {
+              _alerts.insert(0, fhdAlert);
+            }
+            notifyListeners(); // Render immediately
+            print('[FHD] ${fhdAlerts.length} alert(s) rendered immediately');
+          }
+
+          // Step 5: FHD response processed above
+
+          // Rate Limit Protection: Wait before next data point
+          await Future.delayed(const Duration(seconds: 12));
+        } catch (e) {
+          print('Error processing raw point: $e');
         }
-
-        // Rate Limit Protection:
-        // Model Limit: 8000 TPM. Approx 1500 tokens/req => max ~5 req/min.
-        // We wait 12 seconds between calls to be safe.
-        await Future.delayed(const Duration(seconds: 12));
-
-        // Backend will mark as processed (taken = 1) itself
-      }
-
-      // Refresh dashboard data after processing
-      if (unprocessedData.isNotEmpty) {
-        await refreshDashboardData();
-        notifyListeners();
       }
     } catch (e) {
       print('Error in polling loop: $e');

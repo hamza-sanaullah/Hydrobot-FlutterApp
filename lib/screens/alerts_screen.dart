@@ -70,55 +70,92 @@ class AlertsScreen extends StatelessWidget {
       ),
       body: Consumer<HydrobotProvider>(
         builder: (context, provider, child) {
-          if (provider.alerts.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 48,
-                    color: AppTheme.gray400,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No alerts yet',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppTheme.gray400,
+          return Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                decoration: BoxDecoration(
+                  color: AppTheme.gray100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.gray300),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: AppTheme.gray600,
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'System is monitoring...',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.gray400,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        provider.notificationsEnabled
+                            ? 'System is monitoring for new alerts.'
+                            : 'Notifications are disabled. Enable to receive alerts.',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.gray600,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: provider.alerts.length,
-            itemBuilder: (context, index) {
-              final alert = provider.alerts[index];
-              return _AlertCard(
-                alert: alert,
-                onTap: () {
-                  provider.markAlertAsRead(alert.id);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AlertDetailScreen(alert: alert),
-                    ),
-                  );
-                },
-              );
-            },
+              Expanded(
+                child: provider.alerts.isEmpty
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.notifications_none,
+                              size: 52,
+                              color: AppTheme.gray500,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No alerts yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppTheme.gray600,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'Alerts will appear here when backends respond.',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.gray500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: provider.alerts.length,
+                        itemBuilder: (context, index) {
+                          final alert = provider.alerts[index];
+                          return _AlertCard(
+                            alert: alert,
+                            onTap: () {
+                              provider.markAlertAsRead(alert.id);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      AlertDetailScreen(alert: alert),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

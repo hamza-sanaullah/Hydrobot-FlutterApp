@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/hydrobot_provider.dart';
@@ -75,15 +77,12 @@ class SettingsScreen extends StatelessWidget {
                           isExpanded: true,
                           underline: const SizedBox(),
                           items: const [
-                            DropdownMenuItem(value: 1, child: Text('1 second')),
-                            DropdownMenuItem(
-                                value: 3, child: Text('3 seconds')),
-                            DropdownMenuItem(
-                                value: 5, child: Text('5 seconds')),
-                            DropdownMenuItem(
-                                value: 10, child: Text('10 seconds')),
-                            DropdownMenuItem(
-                                value: 15, child: Text('15 seconds (Default)')),
+                            DropdownMenuItem(value: 10, child: Text('10 seconds')),
+                            DropdownMenuItem(value: 30, child: Text('30 seconds')),
+                            DropdownMenuItem(value: 60, child: Text('1 minute')),
+                            DropdownMenuItem(value: 180, child: Text('3 minutes (Default)')),
+                            DropdownMenuItem(value: 300, child: Text('5 minutes')),
+                            DropdownMenuItem(value: 600, child: Text('10 minutes')),
                           ],
                           onChanged: (value) {
                             if (value != null) {
@@ -191,37 +190,52 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppTheme.gray700,
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isConnected 
+          ? AppTheme.green500.withOpacity(0.1) 
+          : AppTheme.red500.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isConnected ? AppTheme.green500 : AppTheme.red500,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.gray700,
+            ),
           ),
-        ),
-        Row(
-          children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: isConnected ? AppTheme.green500 : AppTheme.red500,
-                shape: BoxShape.circle,
+          Row(
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  color: isConnected ? AppTheme.green500 : AppTheme.red500,
+                  shape: BoxShape.circle,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              isConnected ? 'Connected' : 'Disconnected',
-              style: TextStyle(
-                fontSize: 14,
-                color: isConnected ? AppTheme.green500 : AppTheme.red500,
+              const SizedBox(width: 8),
+              Text(
+                isConnected ? 'Connected ✓' : 'Disconnected ✗',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: isConnected ? AppTheme.green500 : AppTheme.red500,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
